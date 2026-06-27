@@ -2,8 +2,15 @@ import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../api'
 import TableReassign from './TableReassign'
+import type { Round, TableRow } from '../../types'
 
-function AdminTableCard({ round, table, onScored }) {
+interface AdminTableCardProps {
+  round: Round
+  table: TableRow
+  onScored: (roundComplete: boolean) => Promise<void>
+}
+
+function AdminTableCard({ round, table, onScored }: AdminTableCardProps) {
   const [scores, setScores] = useState({ a: '', b: '' })
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(!!table.scored)
@@ -12,7 +19,7 @@ function AdminTableCard({ round, table, onScored }) {
   const teamA = table.assignments.filter(a => a.team === 'A')
   const teamB = table.assignments.filter(a => a.team === 'B')
 
-  async function submit(e) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     try {
@@ -23,7 +30,7 @@ function AdminTableCard({ round, table, onScored }) {
       setDone(true)
       onScored(res.round_complete)
     } catch (err) {
-      alert(err.message)
+      alert((err as Error).message)
     } finally {
       setLoading(false)
     }
@@ -104,7 +111,11 @@ function AdminTableCard({ round, table, onScored }) {
   )
 }
 
-export default function AdminTablesColumn({ round }) {
+interface AdminTablesColumnProps {
+  round: Round | null | undefined
+}
+
+export default function AdminTablesColumn({ round }: AdminTablesColumnProps) {
   const qc = useQueryClient()
   const [generating, setGenerating] = useState(false)
   const [generateError, setGenerateError] = useState('')
@@ -121,13 +132,13 @@ export default function AdminTablesColumn({ round }) {
       await api.generateRound()
       await qc.invalidateQueries({ queryKey: ['round', 'current'] })
     } catch (e) {
-      setGenerateError(e.message)
+      setGenerateError((e as Error).message)
     } finally {
       setGenerating(false)
     }
   }
 
-  async function handleScored(roundComplete) {
+  async function handleScored(roundComplete: boolean) {
     await qc.invalidateQueries({ queryKey: ['round', 'current'] })
     await qc.invalidateQueries({ queryKey: ['leaderboard'] })
     if (roundComplete) {
@@ -172,7 +183,6 @@ export default function AdminTablesColumn({ round }) {
           onScored={handleScored}
         />
       ))}
-
     </div>
   )
 }

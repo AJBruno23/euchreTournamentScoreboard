@@ -1,4 +1,20 @@
-export default function ConfirmModal({ title, body, confirmLabel = 'Yes', cancelLabel = 'No', onConfirm, onClose }) {
+interface ConfirmModalProps {
+  title: string
+  body?: string
+  confirmLabel?: string
+  cancelLabel?: string
+  onConfirm: () => void
+  onClose: () => void
+}
+
+export default function ConfirmModal({
+  title,
+  body,
+  confirmLabel = 'Yes',
+  cancelLabel = 'No',
+  onConfirm,
+  onClose,
+}: ConfirmModalProps) {
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div className="bg-slate-800 rounded-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>

@@ -2,8 +2,13 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '../../api'
 import Leaderboard from './Leaderboard'
 import CurrentTables from './CurrentTables'
+import type { Tournament } from '../../types'
 
-export default function ViewerView({ tournament }) {
+interface ViewerViewProps {
+  tournament: Tournament
+}
+
+export default function ViewerView({ tournament }: ViewerViewProps) {
   const { data: leaderboard } = useQuery({
     queryKey: ['leaderboard'],
     queryFn: api.getLeaderboard,
@@ -24,17 +29,19 @@ export default function ViewerView({ tournament }) {
     )
   }
 
+  if (tournament.status === 'finished') {
+    return (
+      <div className="max-w-2xl mx-auto p-4">
+        <div className="bg-slate-800 rounded-xl p-4">
+          <h2 className="text-white font-semibold text-3xl mb-4">Final Scores</h2>
+          <Leaderboard data={leaderboard} />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div>
-      {tournament.status === 'finished' && (
-        <div className="bg-green-900/40 border-b border-green-700 px-4 py-3 text-center">
-          <p className="text-green-200 font-semibold">Final Scores</p>
-          {leaderboard?.standings[0] && (
-            <p className="text-green-400 text-sm">Winner: {leaderboard.standings[0].name}</p>
-          )}
-        </div>
-      )}
-
       <div className="flex min-h-screen">
         <div className="flex-1 p-6">
           <h2 className="text-white font-semibold mb-8 text-center text-2xl">Leaderboard</h2>

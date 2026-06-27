@@ -1,6 +1,10 @@
 import ScoringRules from './viewer/ScoringRules'
 
-export default function RulesModal({ onClose }) {
+interface RulesModalProps {
+  onClose: () => void
+}
+
+export default function RulesModal({ onClose }: RulesModalProps) {
   return (
     <div className="fixed inset-0 bg-black/60 flex items-start justify-center z-50 p-4 overflow-y-auto" onClick={onClose}>
       <div className="bg-slate-900 rounded-2xl w-full max-w-4xl my-16" onClick={e => e.stopPropagation()}>

@@ -1,23 +1,35 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../api'
+import type { Round, TableRow, Player } from '../../types'
 
-export default function TableReassign({ round, table, onClose }) {
+interface TableReassignProps {
+  round: Round
+  table: TableRow
+  onClose: () => void
+}
+
+interface Selection {
+  playerId: number
+  team: 'A' | 'B'
+}
+
+export default function TableReassign({ round, table, onClose }: TableReassignProps) {
   const qc = useQueryClient()
   const { data: players = [] } = useQuery({ queryKey: ['players'], queryFn: api.getPlayers })
-  const activePlayers = players.filter(p => p.active)
+  const activePlayers = players.filter((p: Player) => p.active)
 
-  const [selected, setSelected] = useState(table.assignments.map(a => ({ playerId: a.id, team: a.team })))
+  const [selected, setSelected] = useState<Selection[]>(
+    table.assignments.map(a => ({ playerId: a.id, team: a.team }))
+  )
 
   const teamA = selected.filter(s => s.team === 'A').map(s => s.playerId)
   const teamB = selected.filter(s => s.team === 'B').map(s => s.playerId)
 
-  function togglePlayer(playerId, team) {
+  function togglePlayer(playerId: number, team: 'A' | 'B') {
     setSelected(prev => {
       const existing = prev.find(s => s.playerId === playerId)
-      if (existing) {
-        return prev.filter(s => s.playerId !== playerId)
-      }
+      if (existing) return prev.filter(s => s.playerId !== playerId)
       if (prev.length >= 4) return prev
       return [...prev, { playerId, team }]
     })
@@ -34,7 +46,7 @@ export default function TableReassign({ round, table, onClose }) {
       await qc.invalidateQueries({ queryKey: ['round', 'current'] })
       onClose()
     } catch (e) {
-      alert(e.message)
+      alert((e as Error).message)
     }
   }
 
@@ -45,10 +57,10 @@ export default function TableReassign({ round, table, onClose }) {
         <p className="text-slate-400 text-xs">Select 2 players per team (4 total)</p>
 
         <div className="grid grid-cols-2 gap-3">
-          {['A', 'B'].map(team => (
+          {(['A', 'B'] as const).map(team => (
             <div key={team} className={`rounded-lg p-3 ${team === 'A' ? 'bg-blue-900/30 border border-blue-800/50' : 'bg-red-900/30 border border-red-800/50'}`}>
               <p className={`text-xs mb-2 ${team === 'A' ? 'text-blue-400' : 'text-red-400'}`}>Team {team}</p>
-              {activePlayers.map(p => {
+              {activePlayers.map((p: Player) => {
                 const isSelected = selected.some(s => s.playerId === p.id && s.team === team)
                 const isOtherTeam = selected.some(s => s.playerId === p.id && s.team !== team)
                 return (
@@ -71,15 +83,15 @@ export default function TableReassign({ round, table, onClose }) {
         </div>
 
         <p className="text-slate-400 text-xs text-center">
-          {selected.filter(s => s.team === 'A').length}/2 Team A &nbsp;·&nbsp;
-          {selected.filter(s => s.team === 'B').length}/2 Team B
+          {teamA.length}/2 Team A &nbsp;·&nbsp;
+          {teamB.length}/2 Team B
         </p>
 
         <div className="flex gap-2">
           <button onClick={onClose} className="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-300 py-2 rounded-lg transition-colors text-sm">Cancel</button>
           <button
             onClick={save}
-            disabled={selected.length !== 4 || selected.filter(s => s.team === 'A').length !== 2}
+            disabled={selected.length !== 4 || teamA.length !== 2}
             className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-600 text-white font-semibold py-2 rounded-lg transition-colors text-sm"
           >
             Save

@@ -1,4 +1,11 @@
-const RULES = [
+interface Rule {
+  scenario: string
+  points: string
+  team: string
+  color: string
+}
+
+const RULES: Rule[] = [
   { scenario: 'Win 3 or 4 tricks', points: '+1 pt', team: 'Winning team', color: 'text-green-400' },
   { scenario: 'Win all 5 tricks', points: '+2 pts', team: 'Winning team', color: 'text-green-400' },
   { scenario: 'Euchre (opponents wins 3+ tricks when you called trump)', points: '+2 pts', team: 'Defending team', color: 'text-red-400' },

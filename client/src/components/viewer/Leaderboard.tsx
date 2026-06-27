@@ -1,6 +1,13 @@
 import { PencilIcon, TrashIcon } from '../icons'
+import type { LeaderboardData, Standing } from '../../types'
 
-export default function Leaderboard({ data, onEdit, onDelete }) {
+interface LeaderboardProps {
+  data: LeaderboardData | undefined
+  onEdit?: (player: Standing) => void
+  onDelete?: (player: Standing) => void
+}
+
+export default function Leaderboard({ data, onEdit, onDelete }: LeaderboardProps) {
   if (!data) return <p className="text-slate-400 text-center py-8">Loading...</p>
   const { standings } = data
 
@@ -10,7 +17,6 @@ export default function Leaderboard({ data, onEdit, onDelete }) {
 
   const isAdmin = !!(onEdit || onDelete)
 
-  // Compute display rank accounting for ties
   const ranks = standings.map((player, i) => {
     if (i === 0) return 1
     return standings[i - 1].total_points === player.total_points ? null : i + 1
@@ -18,12 +24,14 @@ export default function Leaderboard({ data, onEdit, onDelete }) {
   const displayRanks = ranks.map((r, i) => {
     if (r !== null) return r
     for (let j = i - 1; j >= 0; j--) {
-      if (ranks[j] !== null) return ranks[j]
+      if (ranks[j] !== null) return ranks[j] as number
     }
     return 1
   })
-  // A rank is tied if more than one player shares it
-  const rankCounts = displayRanks.reduce((acc, r) => { acc[r] = (acc[r] ?? 0) + 1; return acc }, {})
+  const rankCounts = displayRanks.reduce<Record<number, number>>((acc, r) => {
+    acc[r] = (acc[r] ?? 0) + 1
+    return acc
+  }, {})
 
   return (
     <div className="space-y-2.5 mx-10">

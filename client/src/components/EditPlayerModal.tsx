@@ -1,12 +1,19 @@
 import { useState } from 'react'
 import { noAutofill } from '../formProps'
+import type { Standing } from '../types'
 
-export default function EditPlayerModal({ player, onSave, onClose }) {
+interface EditPlayerModalProps {
+  player: Standing
+  onSave: (id: number, data: { name: string; score: number }) => Promise<void>
+  onClose: () => void
+}
+
+export default function EditPlayerModal({ player, onSave, onClose }: EditPlayerModalProps) {
   const [name, setName] = useState(player.name)
   const [score, setScore] = useState(String(player.total_points))
   const [error, setError] = useState('')
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     if (!name.trim()) { setError('Name cannot be empty'); return }
@@ -16,7 +23,7 @@ export default function EditPlayerModal({ player, onSave, onClose }) {
       await onSave(player.id, { name: name.trim(), score: parsedScore })
       onClose()
     } catch (err) {
-      setError(err.message)
+      setError((err as Error).message)
     }
   }
 

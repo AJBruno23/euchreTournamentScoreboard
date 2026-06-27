@@ -7,8 +7,13 @@ import ViewerView from '../components/viewer/ViewerView'
 import PinModal from '../components/PinModal'
 import RulesModal from '../components/RulesModal'
 import ConfirmModal from '../components/ConfirmModal'
+import type { Tournament } from '../types'
 
-export default function TournamentPage({ tournament }) {
+interface TournamentPageProps {
+  tournament: Tournament
+}
+
+export default function TournamentPage({ tournament }: TournamentPageProps) {
   const { isAdmin, logout } = useAdmin()
   const [showMenu, setShowMenu] = useState(false)
   const [showPinModal, setShowPinModal] = useState(false)
@@ -24,11 +29,11 @@ export default function TournamentPage({ tournament }) {
       await qc.invalidateQueries({ queryKey: ['tournament'] })
       await qc.invalidateQueries({ queryKey: ['leaderboard'] })
     } catch (e) {
-      alert(e.message)
+      alert((e as Error).message)
     }
   }
 
-  function handleMenuAction(action) {
+  function handleMenuAction(action: string) {
     setShowMenu(false)
     if (action === 'auth') {
       if (isAdmin) { logout(); setPreviewingPlayerView(false) }
@@ -48,13 +53,12 @@ export default function TournamentPage({ tournament }) {
 
   return (
     <div className="min-h-screen">
-      <header className="bg-slate-900 border-b border-slate-700 px-4 py-3 flex items-center justify-between">
-        <div>
-          <h1 className="text-white font-bold text-2xl leading-none">{tournament.name}</h1>
-          <p className="text-slate-400 text-xs mt-0.5">{statusLabel}</p>
-        </div>
+      <header className="bg-slate-900 border-b border-slate-700 px-4 py-3 flex items-center relative">
+        <p className="text-slate-300 text-base font-semibold shrink-0 whitespace-nowrap">{statusLabel}</p>
 
-        <div className="flex items-center gap-2">
+        <h1 className="text-white font-bold text-2xl leading-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap">{tournament.name}</h1>
+
+        <div className="flex items-center gap-2 ml-auto shrink-0">
           {isAdmin && (
             <div className="flex bg-slate-700 rounded-lg p-0.5">
               <button

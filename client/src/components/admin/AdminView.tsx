@@ -9,8 +9,13 @@ import AdminTablesColumn from './AdminTablesColumn'
 import AddPlayerModal from '../AddPlayerModal'
 import EditPlayerModal from '../EditPlayerModal'
 import ConfirmModal from '../ConfirmModal'
+import type { Tournament, Standing, LeaderboardData } from '../../types'
 
-function saveResultsAsJson(tournament, leaderboard) {
+interface AdminViewProps {
+  tournament: Tournament
+}
+
+function saveResultsAsJson(tournament: Tournament, leaderboard: LeaderboardData) {
   const payload = {
     tournament: tournament.name,
     date: new Date().toLocaleDateString(),
@@ -31,10 +36,10 @@ function saveResultsAsJson(tournament, leaderboard) {
   URL.revokeObjectURL(url)
 }
 
-export default function AdminView({ tournament }) {
+export default function AdminView({ tournament }: AdminViewProps) {
   const [showAddPlayer, setShowAddPlayer] = useState(false)
-  const [editTarget, setEditTarget] = useState(null)
-  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [editTarget, setEditTarget] = useState<Standing | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Standing | null>(null)
   const qc = useQueryClient()
   const navigate = useNavigate()
   const { logout } = useAdmin()
@@ -57,22 +62,45 @@ export default function AdminView({ tournament }) {
       await api.startTournament()
       await qc.invalidateQueries({ queryKey: ['tournament'] })
     } catch (e) {
-      alert(e.message)
+      alert((e as Error).message)
     }
   }
 
   async function handleNewTournament() {
     try {
       await api.resetTournament()
-      // Update the cached status synchronously so the '/' route renders SetupPage
-      // immediately — avoids a transient re-render on /tournament (the flash).
-      qc.setQueryData(['tournament'], prev => prev ? { ...prev, status: 'setup' } : prev)
       logout()
+      qc.setQueryData(['tournament'], (prev: Tournament | undefined) =>
+        prev ? { ...prev, status: 'setup' as const } : prev
+      )
       navigate('/')
       qc.invalidateQueries()
     } catch (e) {
-      alert(e.message)
+      alert((e as Error).message)
     }
+  }
+
+  async function handleAddPlayer(name: string) {
+    await api.addPlayer(name)
+    qc.invalidateQueries({ queryKey: ['players'] })
+    qc.invalidateQueries({ queryKey: ['leaderboard'] })
+  }
+
+  async function handleEditPlayer(id: number, { name, score }: { name: string; score: number }) {
+    const player = leaderboard?.standings.find(p => p.id === id)
+    const baseScore = player ? player.total_points - (player.score_adjustment ?? 0) : 0
+    const adjustment = score - baseScore
+    await api.updatePlayer(id, { name, score_adjustment: adjustment })
+    qc.invalidateQueries({ queryKey: ['players'] })
+    qc.invalidateQueries({ queryKey: ['leaderboard'] })
+  }
+
+  async function handleDeletePlayer() {
+    if (!deleteTarget) return
+    await api.deletePlayer(deleteTarget.id)
+    setDeleteTarget(null)
+    qc.invalidateQueries({ queryKey: ['players'] })
+    qc.invalidateQueries({ queryKey: ['leaderboard'] })
   }
 
   // ── Finished ──────────────────────────────────────────────────────────────
@@ -80,8 +108,7 @@ export default function AdminView({ tournament }) {
     return (
       <div className="max-w-2xl mx-auto p-4 space-y-4">
         <div className="bg-slate-800 rounded-xl p-4">
-          <h2 className="text-white font-semibold text-xl mb-1">Final Scores</h2>
-          <p className="text-slate-400 text-sm mb-4">{tournament.name}</p>
+          <h2 className="text-white font-semibold text-3xl mb-4">Final Scores</h2>
           <Leaderboard data={leaderboard} />
         </div>
         <div className="flex gap-3">
@@ -126,28 +153,6 @@ export default function AdminView({ tournament }) {
   }
 
   // ── Active ────────────────────────────────────────────────────────────────
-  async function handleAddPlayer(name) {
-    await api.addPlayer(name)
-    qc.invalidateQueries({ queryKey: ['players'] })
-    qc.invalidateQueries({ queryKey: ['leaderboard'] })
-  }
-
-  async function handleEditPlayer(id, { name, score }) {
-    const player = leaderboard?.standings.find(p => p.id === id)
-    const baseScore = player ? player.total_points - (player.score_adjustment ?? 0) : 0
-    const adjustment = score - baseScore
-    await api.updatePlayer(id, { name, score_adjustment: adjustment })
-    qc.invalidateQueries({ queryKey: ['players'] })
-    qc.invalidateQueries({ queryKey: ['leaderboard'] })
-  }
-
-  async function handleDeletePlayer() {
-    await api.deletePlayer(deleteTarget.id)
-    setDeleteTarget(null)
-    qc.invalidateQueries({ queryKey: ['players'] })
-    qc.invalidateQueries({ queryKey: ['leaderboard'] })
-  }
-
   return (
     <div>
       <div className="flex min-h-screen">
@@ -167,7 +172,11 @@ export default function AdminView({ tournament }) {
               </button>
             </div>
           </div>
-          <Leaderboard data={leaderboard} onEdit={setEditTarget} onDelete={setDeleteTarget} />
+          <Leaderboard
+            data={leaderboard}
+            onEdit={(player) => setEditTarget(player)}
+            onDelete={(player) => setDeleteTarget(player)}
+          />
         </div>
 
         <div className="w-px bg-slate-700 shrink-0" />

@@ -2,12 +2,16 @@ import { useState } from 'react'
 import { useAdmin } from '../AdminContext'
 import { noAutofill } from '../formProps'
 
-export default function PinModal({ onClose }) {
+interface PinModalProps {
+  onClose: () => void
+}
+
+export default function PinModal({ onClose }: PinModalProps) {
   const { login, error, setError } = useAdmin()
   const [pin, setPin] = useState('')
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     const ok = await login(pin)

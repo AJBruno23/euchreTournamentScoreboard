@@ -2,22 +2,20 @@ import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
-import { useAdmin } from '../AdminContext'
 import { noAutofill } from '../formProps'
 
-function toTitleCase(str) {
+function toTitleCase(str: string): string {
   return str.replace(/\b\w/g, c => c.toUpperCase())
 }
 
 export default function SetupPage() {
   const qc = useQueryClient()
   const navigate = useNavigate()
-  const { login } = useAdmin()
   const [name, setName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     if (!name.trim()) { setError('Please enter a valid name'); return }
@@ -27,7 +25,7 @@ export default function SetupPage() {
       await qc.invalidateQueries({ queryKey: ['tournament'] })
       navigate('/tournament')
     } catch (e) {
-      setError(e.message)
+      setError((e as Error).message)
     } finally {
       setLoading(false)
     }

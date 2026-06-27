@@ -1,11 +1,17 @@
-export default function CurrentTables({ round }) {
+import type { Round } from '../../types'
+
+interface CurrentTablesProps {
+  round: Round | null | undefined
+}
+
+export default function CurrentTables({ round }: CurrentTablesProps) {
   if (!round) {
     return <p className="text-slate-400 text-center py-8">No active round</p>
   }
 
   return (
     <div className="space-y-3">
-{round.tables.map(table => {
+      {round.tables.map(table => {
         const teamA = table.assignments.filter(a => a.team === 'A')
         const teamB = table.assignments.filter(a => a.team === 'B')
         return (

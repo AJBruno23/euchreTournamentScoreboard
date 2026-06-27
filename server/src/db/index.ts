@@ -1,13 +1,13 @@
-import { DatabaseSync } from 'node:sqlite';
-import { mkdirSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { DatabaseSync } from 'node:sqlite'
+import { mkdirSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const DB_PATH = join(__dirname, '../../data/tournament.db');
-mkdirSync(join(__dirname, '../../data'), { recursive: true });
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const DB_PATH = join(__dirname, '../../data/tournament.db')
+mkdirSync(join(__dirname, '../../data'), { recursive: true })
 
-export const db = new DatabaseSync(DB_PATH);
+export const db = new DatabaseSync(DB_PATH)
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS tournament (
@@ -46,8 +46,6 @@ db.exec(`
     player_id INTEGER NOT NULL REFERENCES players(id),
     team TEXT NOT NULL CHECK (team IN ('A', 'B'))
   );
-`);
+`)
 
-// Migrations for columns added after initial schema
-try { db.exec('ALTER TABLE players ADD COLUMN score_adjustment INTEGER NOT NULL DEFAULT 0'); } catch {}
-
+try { db.exec('ALTER TABLE players ADD COLUMN score_adjustment INTEGER NOT NULL DEFAULT 0') } catch {}

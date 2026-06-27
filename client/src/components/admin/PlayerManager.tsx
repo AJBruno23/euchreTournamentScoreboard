@@ -4,64 +4,67 @@ import { api } from '../../api'
 import ConfirmModal from '../ConfirmModal'
 import { noAutofill } from '../../formProps'
 import { PencilIcon, TrashIcon, CheckIcon, XIcon } from '../icons'
+import type { Tournament, Player } from '../../types'
 
-export default function PlayerManager({ tournament }) {
+interface PlayerManagerProps {
+  tournament: Tournament
+}
+
+export default function PlayerManager({ tournament }: PlayerManagerProps) {
   const qc = useQueryClient()
   const { data: players = [] } = useQuery({ queryKey: ['players'], queryFn: api.getPlayers })
   const [newName, setNewName] = useState('')
   const [error, setError] = useState('')
-  const [editId, setEditId] = useState(null)
+  const [editId, setEditId] = useState<number | null>(null)
   const [editName, setEditName] = useState('')
-  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleteTarget, setDeleteTarget] = useState<Player | null>(null)
 
-  async function addPlayer(e) {
+  async function addPlayer(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    if (!newName.trim()) {
-      setError('Please enter a valid name')
-      return
-    }
+    if (!newName.trim()) { setError('Please enter a valid name'); return }
     try {
       await api.addPlayer(newName.trim())
       setNewName('')
       qc.invalidateQueries({ queryKey: ['players'] })
     } catch (e) {
-      setError(e.message)
+      setError((e as Error).message)
     }
   }
 
-  async function saveEdit(id) {
+  async function saveEdit(id: number) {
     try {
       await api.updatePlayer(id, { name: editName })
       setEditId(null)
       qc.invalidateQueries({ queryKey: ['players'] })
     } catch (e) {
-      alert(e.message)
+      alert((e as Error).message)
     }
   }
 
-  async function toggleActive(player) {
+  async function toggleActive(player: Player) {
     try {
-      await api.updatePlayer(player.id, { active: !player.active })
+      await api.updatePlayer(player.id, { active: player.active ? 0 : 1 })
       qc.invalidateQueries({ queryKey: ['players'] })
     } catch (e) {
-      alert(e.message)
+      alert((e as Error).message)
     }
   }
 
   async function confirmDelete() {
+    if (!deleteTarget) return
     try {
       await api.deletePlayer(deleteTarget.id)
       qc.invalidateQueries({ queryKey: ['players'] })
     } catch (e) {
-      alert(e.message)
+      alert((e as Error).message)
     } finally {
       setDeleteTarget(null)
     }
   }
 
-  const active = players.filter(p => p.active)
-  const inactive = players.filter(p => !p.active)
+  const active = players.filter((p: Player) => p.active)
+  const inactive = players.filter((p: Player) => !p.active)
 
   return (
     <div className="space-y-4">
@@ -89,7 +92,7 @@ export default function PlayerManager({ tournament }) {
         {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
 
         <ul className="space-y-1.5">
-          {active.map(player => (
+          {active.map((player: Player) => (
             <li key={player.id} className="flex items-center gap-2 bg-slate-700/50 rounded-lg px-3 py-2">
               {editId === player.id ? (
                 <>
@@ -135,7 +138,7 @@ export default function PlayerManager({ tournament }) {
           <div className="mt-3 pt-3 border-t border-slate-700">
             <p className="text-slate-500 text-xs mb-2">Sitting out</p>
             <ul className="space-y-1">
-              {inactive.map(player => (
+              {inactive.map((player: Player) => (
                 <li key={player.id} className="flex items-center gap-2 bg-slate-700/30 rounded-lg px-3 py-1.5">
                   <span className="flex-1 text-slate-400 text-sm line-through">{player.name}</span>
                   <button

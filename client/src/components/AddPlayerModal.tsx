@@ -1,11 +1,16 @@
 import { useState } from 'react'
 import { noAutofill } from '../formProps'
 
-export default function AddPlayerModal({ onAdd, onClose }) {
+interface AddPlayerModalProps {
+  onAdd: (name: string) => Promise<void>
+  onClose: () => void
+}
+
+export default function AddPlayerModal({ onAdd, onClose }: AddPlayerModalProps) {
   const [name, setName] = useState('')
   const [error, setError] = useState('')
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     if (!name.trim()) { setError('Please enter a valid name'); return }
@@ -13,7 +18,7 @@ export default function AddPlayerModal({ onAdd, onClose }) {
       await onAdd(name.trim())
       onClose()
     } catch (err) {
-      setError(err.message)
+      setError((err as Error).message)
     }
   }
 
