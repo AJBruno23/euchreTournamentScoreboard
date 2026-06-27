@@ -1,0 +1,14 @@
+{
+  "name": "euchre-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --experimental-sqlite --watch src/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "euchre-tournament-scoreboard": "file:..",
+    "express": "^4.19.2"
+  }
+}
